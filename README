@@ -1,3 +1,5 @@
+# twitter.py help
+
 Usage: twitter.py [OPTIONS]
 
   Simple tool that uses Twitter API to periodically check in infinite loop
@@ -23,3 +25,12 @@ Options:
   --show-name                   Show tweet's author name.
   --show-screen-name            Show tweet's author twitter nickname.
   --help                        Show this message and exit.
+
+# configuration file
+In order to be able to properly start twitter wall tool, it is necessary to create configuration file containing OAuth credentials to authenticate into Twitter API. The configuration file has following form:
+'''
+[twitter]
+key=XXXXXXXXXX
+secret=YYYYYYYYY
+'''
+Of course, *XXXXXXXXXX* and *YYYYYYYYY* must be replaced for correct Twitter API key and secret. Twitter wall tool will implicitly look for configuration file named auth.cfg in executed directory, however this behavior can be changed using *--config* parameter.
