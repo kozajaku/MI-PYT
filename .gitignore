@@ -1,3 +1,4 @@
 env
 auth.cfg
 .idea
+__pycache__
