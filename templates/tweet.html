@@ -1,0 +1,64 @@
+<div class="tweet">
+    <div class="id">
+        <span class="label">Id: </span>
+        <span class="value">{{ tweet.id }}</span>
+    </div>
+    <div class="name">
+        <span class="label">Name: </span>
+        <span class="value">{{ tweet.user.name }}</span>
+    </div>
+    <div class="screen-name">
+        <span class="label">Screen name: </span>
+        <span class="value">{{ tweet.user.screen_name }}</span>
+    </div>
+    <div class="created">
+        <span class="label">Creation time: </span>
+        <span class="value">{{ tweet.created_at | time }}</span>
+    </div>
+    <div class="text">
+        <div class="label">Tweet text:</div>
+        <div class="value">{{ tweet.text }}</div>
+    </div>
+    <div class="entities">
+        {% if (tweet.entities.hashtags | length) != 0 %}
+        <div class="hashtags">
+            <span class="label">Hashtags: </span>
+            <span class="value">
+                {{ tweet.entities.hashtags | hashtags | safe }}
+            </span>
+        </div>
+        {% endif %}
+        {% if (tweet.entities.user_mentions | length) != 0 %}
+        <div class="mentions">
+            <span class="label">User mentions: </span>
+            <span class="value">
+                {{ tweet.entities.user_mentions | user_mentions | safe }}
+            </span>
+        </div>
+        {% endif %}
+        {% if (tweet.entities.urls | length) != 0 %}
+        <div class="urls">
+            <span class="label">URLs: </span>
+            <span class="value">
+                {{ tweet.entities.urls | urls | safe }}
+            </span>
+        </div>
+        {% endif %}
+        {% if (tweet.entities.symbols | length) != 0 %}
+        <div class="symbols">
+            <span class="label">Symbols: </span>
+            <span class="value">
+                {{ tweet.entities.symbols | symbols | safe }}
+            </span>
+        </div>
+        {% endif %}
+        {% if (tweet.entities.media | length) != 0 %}
+        <div class="media">
+            <span class="label">Media: </span>
+            <div class="value">
+                {{ tweet.entities.media | media | safe }}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>

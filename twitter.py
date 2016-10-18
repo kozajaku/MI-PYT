@@ -3,15 +3,12 @@ import base64
 import click
 import configparser
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 import flask
-from flask import g
+import urllib.parse
 
 app = flask.Flask(__name__)
-
-class WebConfiguration:
-    def __init__(self):
-
+app.config["config_path"] = "auth.cfg"
 
 
 class TwitterWall:
@@ -48,7 +45,7 @@ class TwitterWall:
         """Function fetches tweets from Twitter API using provided api params."""
         req = self.session.get("https://api.twitter.com/1.1/search/tweets.json", params=params)
         # print info if verbose
-        if configuration["verbose"]:
+        if "verbose" in configuration and configuration["verbose"]:
             click.echo("* Fetched {} tweets in {}".format(len(req.json()["statuses"]), time.strftime("%H:%M:%S")))
         return req.json()["statuses"]
 
@@ -63,9 +60,15 @@ class TwitterWall:
         filtered = filtered - len(tweets)
 
         # print info if verbose
-        if configuration["verbose"]:
+        if "verbose" in configuration and configuration["verbose"]:
             click.echo("* Filtered {} tweets.".format(filtered))
         return tweets
+
+    def tweet_single_fetch(self, search, count, configuration):
+        """Function fetches count tweets, filters them and return for the purpose of web app"""
+        params = {"q": search,
+                  "count": count}
+        return self.filter_tweets(self.fetch_tweets(params, configuration), configuration)
 
     def tweet_stream(self, search, count, interval, configuration):
         """Function fetches tweets in infinite loop and yields their generator"""
@@ -119,21 +122,21 @@ class TwitterWall:
         if configuration["show_screen_name"]:
             screen_name = "Screen name: {}, ".format(tweet["user"]["screen_name"])
         if configuration["show_date"]:
-            created = "Created: {}, ".format(datetime.strptime(tweet["created_at"], "%a %b %d %H:%M:%S %z %Y")
-                                             .strftime("%H:%M:%S %d/%m/%Y"))
+            created = "Created: {}, ".format(convert_time(tweet["created_at"]))
         if configuration["show_id"]:
             tid = "Id: {}, ".format(tweet["id"])
         text = "Text: {}".format(tweet["text"])
         return "{}{}{}{}{}\n".format(tid, created, name, screen_name, text)
 
     def continually_print_tweets(self, search, count, interval, configuration):
-        """Print formated stream of tweets from tweet_stream."""
+        """Print formatted stream of tweets from tweet_stream."""
         for tweet in self.tweet_stream(search, count, interval, configuration):
             click.echo(self.tweet_console_format(tweet, configuration))
 
 
 @app.route("/search")
 def search_page():
+    """If properly parsed parameters from http get method, renders resulting tweets."""
     # redirect back to home page if search query is not valid
     if "q" not in flask.request.args:
         return flask.redirect(flask.url_for("index_page"))
@@ -143,17 +146,71 @@ def search_page():
 
     # q_param is valid here
     # detect retweet param
-    filter_retweeted = False
+    configuration = {"retweeted": True}
     if "filter-retweeted" in flask.request.args and flask.request.args["filter-retweeted"] == "on":
-        filter_retweeted = True
+        configuration["retweeted"] = False
     # create twitter wall instance
-    twitter_wall = TwitterWall()
-
+    twitter_wall = TwitterWall(*parse_configuration(app.config["config_path"]))
+    # fetch maximum number of tweets (100 max defined by Twitter API
+    tweets = twitter_wall.tweet_single_fetch(q_param, 100, configuration)
+    return flask.render_template("search.html", tweets=tweets, query=q_param)
 
 
 @app.route("/")
 def index_page():
+    """Render index page where the search form is shown."""
     return flask.render_template("index.html")
+
+
+@app.template_filter('time')
+def convert_time(passed_time):
+    """Convert the Twitter time format to own type"""
+    return datetime.strptime(passed_time, "%a %b %d %H:%M:%S %z %Y").replace(tzinfo=timezone.utc). \
+        astimezone(tz=None).strftime("%H:%M:%S %d/%m/%Y")
+
+
+def create_link(href, text, as_search=False):
+    if as_search:
+        escaped_href = urllib.parse.quote_plus(href)
+        return "<a href=\"search?q={}\">{}</a>".format(escaped_href, text)
+    else:
+        return "<a href=\"{}\">{}</a>".format(href, text)
+
+
+@app.template_filter('user_mentions')
+def create_user_mentions(mentions):
+    """Convert user_mention entities into readable format"""
+    return ", ".join(
+            map(lambda m: create_link("@" + m["screen_name"], "{} (@{})".format(m["name"], m["screen_name"]), True),
+                mentions))
+
+
+@app.template_filter('hashtags')
+def create_hashtags(hashtags):
+    """Convert hashtag entities into readable format"""
+    return ", ".join(map(lambda h: create_link("#" + h["text"], "#" + h["text"], True), hashtags))
+
+
+@app.template_filter('urls')
+def create_urls(urls):
+    """Convert url entities into readable format"""
+    return ", ".join(map(lambda u: create_link(u["expanded_url"], u["expanded_url"]), urls))
+
+
+@app.template_filter('symbols')
+def create_urls(symbols):
+    """Convert symbol entities into readable format"""
+    return ", ".join(map(lambda s: s["text"], symbols))
+
+
+@app.template_filter('media')
+def create_media(media):
+    """Convert media entities into readable format"""
+
+    def create_image(src):
+        return "<image src=\"{}:small\" />".format(src)
+
+    return "\n".join(map(lambda m: create_image(m["media_url"]), media))
 
 
 def parse_configuration(config_path):
@@ -211,12 +268,18 @@ def console(config_path, search, count, interval, **configuration):
 
 @cli.command()
 @click.option("--debug", is_flag=True, help="Setup debug flags for Flask application.")
+@click.option("--port", default=5000, help="TCP port of the web server.")
+@click.option("--host", default="127.0.0.1", help="The hostname to listen on.")
 @click.option("--config", "config_path", default="auth.cfg", help="Path to a configuration file with Twitter API keys.")
-def web(debug):
+def web(debug, port, host, config_path):
+    """Web frontend for Twitter Wall tool. User can query specified twitter search expression on simple web page and
+     show results in simple format including all additional tweet entities."""
+    # setup path to configuration file
+    app.config["config_path"] = config_path
     # setup debug flags if debug
     if debug:
         app.config["TEMPLATES_AUTO_RELOAD"] = True
-    app.run(debug=debug)
+    app.run(debug=debug, port=port, host=host)
 
 
 if __name__ == "__main__":

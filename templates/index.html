@@ -3,10 +3,24 @@
 <head>
     <title>Twitter Wall</title>
     <meta charset="utf-8"/>
+    <style>
+        form {
+            border: 1px solid #444;
+            box-shadow: 5px 5px 5px #999;
+            margin-top: 20px;
+            padding: 20px;
+            width: 500px;
+        }
+    </style>
 </head>
 <body>
 <h1>Twitter Wall</h1>
-Welcome to the home page of the simple Twitter Wall application.
+<div>Welcome to the home page of the simple Twitter Wall application. </div>
+<div>You can use following form for searching tweets on
+Twitter or you can pass your query directly by using HTTP GET method on <i>/search?q=&lt;query&gt;</i>
+where <i>&lt;query&gt;</i>
+is your specified url escaped search query.</div>
+
 <form method="get" action="search">
     <table>
         <tr>
