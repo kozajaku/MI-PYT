@@ -203,14 +203,18 @@ def create_urls(symbols):
     return ", ".join(map(lambda s: s["text"], symbols))
 
 
+@app.template_filter("image")
+def create_image(src, size=None):
+    if size is None:
+        return "<image src=\"{}\" />".format(src)
+    else:
+        return "<image src=\"{}:{}\" />".format(src, size)
+
+
 @app.template_filter('media')
 def create_media(media):
     """Convert media entities into readable format"""
-
-    def create_image(src):
-        return "<image src=\"{}:small\" />".format(src)
-
-    return "\n".join(map(lambda m: create_image(m["media_url"]), media))
+    return "\n".join(map(lambda m: create_image(m["media_url"], "small"), media))
 
 
 def parse_configuration(config_path):

@@ -11,6 +11,10 @@
         <span class="label">Screen name: </span>
         <span class="value">{{ tweet.user.screen_name }}</span>
     </div>
+    <div class="avatar">
+        <span class="label">Avatar: </span>
+        <span class="value">{{ tweet.user.profile_image_url | image | safe }}</span>
+    </div>
     <div class="created">
         <span class="label">Creation time: </span>
         <span class="value">{{ tweet.created_at | time }}</span>
