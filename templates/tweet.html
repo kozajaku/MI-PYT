@@ -21,9 +21,10 @@
     </div>
     <div class="text">
         <div class="label">Tweet text:</div>
-        <div class="value">{{ tweet.text }}</div>
+        <div class="value">{{ tweet | textWithEntities | safe }}</div>
     </div>
     <div class="entities">
+        {#
         {% if (tweet.entities.hashtags | length) != 0 %}
         <div class="hashtags">
             <span class="label">Hashtags: </span>
@@ -56,6 +57,7 @@
             </span>
         </div>
         {% endif %}
+        #}
         {% if (tweet.entities.media | length) != 0 %}
         <div class="media">
             <span class="label">Media: </span>

@@ -172,7 +172,7 @@ def convert_time(passed_time):
 def create_link(href, text, as_search=False):
     if as_search:
         escaped_href = urllib.parse.quote_plus(href)
-        return "<a href=\"search?q={}\">{}</a>".format(escaped_href, text)
+        return "<a href=\"/search?q={}\">{}</a>".format(escaped_href, text)
     else:
         return "<a href=\"{}\">{}</a>".format(href, text)
 
@@ -215,6 +215,30 @@ def create_image(src, size=None):
 def create_media(media):
     """Convert media entities into readable format"""
     return "\n".join(map(lambda m: create_image(m["media_url"], "small"), media))
+
+
+@app.template_filter('textWithEntities')
+def text_with_entities(tweet):
+    """Enrich tweet text using twitter entities."""
+    text = tweet["text"]
+    entities = tweet["entities"]
+    # replace hashtags
+    for hashtag in entities["hashtags"]:
+        tmp = "#{}".format(hashtag["text"])
+        text = text.replace(tmp, create_link(tmp, tmp, True), 1)
+    # replace mentions
+    for mention in entities["user_mentions"]:
+        tmp = "@{}".format(mention["screen_name"])
+        text = text.replace(tmp, create_link(tmp, tmp, True), 1)
+    # replace urls
+    for url in entities["urls"]:
+        url_text = url["url"]
+        url_expanded = url["expanded_url"]
+        text = text.replace(url_text, create_link(url_expanded, url_text), 1)
+    for symbol in entities["symbols"]:
+        tmp = "${}".format(symbol["text"])
+        text = text.replace(tmp, create_link(tmp, tmp, True), 1)
+    return text
 
 
 def parse_configuration(config_path):
