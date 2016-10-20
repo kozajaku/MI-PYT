@@ -222,23 +222,35 @@ def text_with_entities(tweet):
     """Enrich tweet text using twitter entities."""
     text = tweet["text"]
     entities = tweet["entities"]
-    # replace hashtags
+    indices_map = {}
+    # hashtag indices
     for hashtag in entities["hashtags"]:
-        tmp = "#{}".format(hashtag["text"])
-        text = text.replace(tmp, create_link(tmp, tmp, True), 1)
-    # replace mentions
+        indices_map[hashtag["indices"][0]] = (hashtag["indices"][1], lambda tmp: create_link(tmp, tmp, True))
+    # mention indices
     for mention in entities["user_mentions"]:
-        tmp = "@{}".format(mention["screen_name"])
-        text = text.replace(tmp, create_link(tmp, tmp, True), 1)
-    # replace urls
+        indices_map[mention["indices"][0]] = (mention["indices"][1], lambda tmp: create_link(tmp, tmp, True))
+    # url indices
     for url in entities["urls"]:
-        url_text = url["url"]
-        url_expanded = url["expanded_url"]
-        text = text.replace(url_text, create_link(url_expanded, url_text), 1)
+        indices_map[url["indices"][0]] = (url["indices"][1], lambda tmp: create_link(url["expanded_url"], tmp))
+    # symbol indices
     for symbol in entities["symbols"]:
-        tmp = "${}".format(symbol["text"])
-        text = text.replace(tmp, create_link(tmp, tmp, True), 1)
-    return text
+        indices_map[symbol["indices"][0]] = (symbol["indices"][1], lambda tmp: create_link(tmp, tmp, True))
+    result = ""
+    i = 0
+    next_to_read = 0
+    while i < len(text):
+        if i in indices_map:
+            index_tuple = indices_map[i]
+            if i > next_to_read:
+                result += text[next_to_read:i]
+            result += index_tuple[1](text[i:index_tuple[0]])
+            i = index_tuple[0] - 1
+            next_to_read = i + 1
+        i += 1
+    if i > next_to_read:
+        result += text[next_to_read:i]
+
+    return result
 
 
 def parse_configuration(config_path):
