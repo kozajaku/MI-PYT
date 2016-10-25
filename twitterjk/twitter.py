@@ -322,6 +322,5 @@ def web(debug, port, host, config_path):
     app.run(debug=debug, port=port, host=host)
 
 
-if __name__ == "__main__":
-    # do some flask debug flag settings
+def main():
     cli()

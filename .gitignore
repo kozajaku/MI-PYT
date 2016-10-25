@@ -2,3 +2,6 @@ env
 auth.cfg
 .idea
 __pycache__
+dist
+twitterjk.egg-info
+build
