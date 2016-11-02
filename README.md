@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.com/kozajaku/MI-PYT.svg?token=qexzosAyQM9jnGAQRNvZ&branch=master)](https://travis-ci.com/kozajaku/MI-PYT)
+
 # betamax testing
 To invoke new cassettes recording for betamax testing, simply setup new environment
 variable named **AUTH_FILE** pointing to path to a configuration file with valid credentials.

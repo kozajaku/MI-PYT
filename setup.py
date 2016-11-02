@@ -5,7 +5,7 @@ with open('README.rst') as f:
 
 setup(
         name='twitterjk',
-        version='0.4',
+        version='0.4.2',
         description='Simple Twitter Wall console/web tool for querying tweets through Twitter API',
         long_description=long_description,
         author='Jakub Koza',
