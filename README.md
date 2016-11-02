@@ -1,3 +1,26 @@
+# betamax testing
+To invoke new cassettes recording for betamax testing, simply setup new environment
+variable named **AUTH_FILE** pointing to path to a configuration file with valid credentials.
+For instance, to start testing by recording new cassettes, invoke:
+```bash
+AUTH_FILE=auth.cfg python setup.py test
+```
+or
+```bash
+AUTH_FILE=auth.cfg pytest tests
+```
+where *auth.cfg* is name of the configuration file.
+
+In order to use already recorded cassettes simple omit the environment
+variable:
+```bash
+python setup.py test
+```
+or
+```bash
+pytest tests
+```
+
 # twitter.py help
 ```
 Usage: twitter.py [OPTIONS] COMMAND [ARGS]...

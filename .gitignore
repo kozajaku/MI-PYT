@@ -5,3 +5,5 @@ __pycache__
 dist
 twitterjk.egg-info
 build
+.cache
+.eggs

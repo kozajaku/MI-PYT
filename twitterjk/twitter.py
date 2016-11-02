@@ -12,34 +12,9 @@ app.config["config_path"] = "auth.cfg"
 
 
 class TwitterWall:
-    def __init__(self, api_key, api_secret):
+    def __init__(self, session):
         """Constructor assigns new twitter session into instance"""
-        self.session = self.twitter_session(api_key, api_secret)
-
-    @staticmethod
-    def twitter_session(api_key, api_secret):
-        """Function creates new http session with properly assigned Authorization header."""
-        session = requests.Session()
-        secret = '{}:{}'.format(api_key, api_secret)
-        secret64 = base64.b64encode(secret.encode('ascii')).decode('ascii')
-
-        headers = {
-            'Authorization': 'Basic {}'.format(secret64),
-            'Host': 'api.twitter.com',
-        }
-
-        r = session.post('https://api.twitter.com/oauth2/token',
-                         headers=headers,
-                         data={'grant_type': 'client_credentials'})
-
-        bearer_token = r.json()['access_token']
-
-        def bearer_auth(req):
-            req.headers['Authorization'] = 'Bearer ' + bearer_token
-            return req
-
-        session.auth = bearer_auth
-        return session
+        self.session = session
 
     def fetch_tweets(self, params, configuration):
         """Function fetches tweets from Twitter API using provided api params."""
@@ -149,8 +124,7 @@ def search_page():
     configuration = {"retweeted": True}
     if "filter-retweeted" in flask.request.args and flask.request.args["filter-retweeted"] == "on":
         configuration["retweeted"] = False
-    # create twitter wall instance
-    twitter_wall = TwitterWall(*parse_configuration(app.config["config_path"]))
+    twitter_wall = app.config["TWITTER_WALL"]
     # fetch maximum number of tweets (100 max defined by Twitter API
     tweets = twitter_wall.tweet_single_fetch(q_param, 100, configuration)
     return flask.render_template("search.html", tweets=tweets, query=q_param)
@@ -267,6 +241,32 @@ def parse_configuration(config_path):
         return key, secret
 
 
+def twitter_session(api_key, api_secret, session=None):
+    """Function creates new http session with properly assigned Authorization header."""
+    if session is None:
+        session = requests.Session()
+    secret = '{}:{}'.format(api_key, api_secret)
+    secret64 = base64.b64encode(secret.encode('ascii')).decode('ascii')
+
+    headers = {
+        'Authorization': 'Basic {}'.format(secret64),
+        'Host': 'api.twitter.com',
+    }
+
+    r = session.post('https://api.twitter.com/oauth2/token',
+                     headers=headers,
+                     data={'grant_type': 'client_credentials'})
+
+    bearer_token = r.json()['access_token']
+
+    def bearer_auth(req):
+        req.headers['Authorization'] = 'Bearer ' + bearer_token
+        return req
+
+    session.auth = bearer_auth
+    return session
+
+
 @click.group()
 def cli():
     pass
@@ -289,7 +289,7 @@ def console(config_path, search, count, interval, **configuration):
     search expression. This tool depends on a configuration file which must be provided by the user. The configuration
     file contains Twitter API key and secret properties, that are afterwards used for authentication purposes."""
     # do some value checking
-    if count < 0 or count >= 100:
+    if count < 0 or count > 100:
         click.echo("Invalid count value. Count must not be negative and it must not be greater than 100.")
         exit(1)
     if interval < 1:
@@ -299,7 +299,7 @@ def console(config_path, search, count, interval, **configuration):
     auth_data = parse_configuration(config_path)
     try:
         # get authenticated twitter session using configuration
-        twitter_wall = TwitterWall(*auth_data)
+        twitter_wall = TwitterWall(twitter_session(*auth_data))
         twitter_wall.continually_print_tweets(search, count, interval, configuration)
     except requests.ConnectionError:
         click.echo("Unable to establish connection to Twitter.")
@@ -314,11 +314,11 @@ def console(config_path, search, count, interval, **configuration):
 def web(debug, port, host, config_path):
     """Web frontend for Twitter Wall tool. User can query specified twitter search expression on simple web page and
      show results in simple format including all additional tweet entities."""
-    # setup path to configuration file
-    app.config["config_path"] = config_path
     # setup debug flags if debug
     if debug:
         app.config["TEMPLATES_AUTO_RELOAD"] = True
+    # setup TwitterWall instance
+    app.config["TWITTER_WALL"] = TwitterWall(twitter_session(*parse_configuration(config_path)))
     app.run(debug=debug, port=port, host=host)
 
 
