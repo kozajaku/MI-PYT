@@ -7,3 +7,4 @@ twitterjk.egg-info
 build
 .cache
 .eggs
+docs/_build
