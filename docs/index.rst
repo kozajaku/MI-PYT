@@ -30,6 +30,7 @@ Contents:
    usage/index
    testing/index
    documentation/index
+   sources/index
 
 Indices and tables
 ==================
