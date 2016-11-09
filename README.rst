@@ -1,119 +1,37 @@
-|Build Status|
+|Build Status| |Docbuild status|
 
-betamax testing
-===============
+twitterjk
+=========
 
-To invoke new cassettes recording for betamax testing, simply setup new
-environment variable named **AUTH\_FILE** pointing to path to a
-configuration file with valid credentials. For instance, to start
-testing by recording new cassettes, invoke:
+Welcome to the documentation of tool twitterjk. This tool was created for the purposes of MI-PYT lecture at
+FIT CTU college.
 
-.. code:: bash
+The tool is simple program written in Python that is able to query tweets through Twitter API and show them
+in readable format to the user in console or through simple web GUI.
 
-    AUTH_FILE=auth.cfg python setup.py test
+Documentation
+-------------
 
-or
+Documentation can be found online on `twitterjk.readthedocs.io <http://twitterjk.readthedocs.io/>`_ or
+you can build it manually by clonning the repository and executing::
 
-.. code:: bash
+    cd docs
+    python3 -m pip install -r requirements.txt
+    make html
 
-    AUTH_FILE=auth.cfg pytest tests
+Documentation is now created in ``docs/_build/html/``.
 
-where *auth.cfg* is name of the configuration file.
+You can also run the documentation doctest::
 
-In order to use already recorded cassettes simple omit the environment
-variable:
+    make doctest
 
-.. code:: bash
+TestPyPi
+--------
 
-    python setup.py test
-
-or
-
-.. code:: bash
-
-    pytest tests
-
-twitter.py help
-===============
-
-::
-
-    Usage: twitter.py [OPTIONS] COMMAND [ARGS]...
-
-    Options:
-      --help  Show this message and exit.
-
-    Commands:
-      console  Simple tool that uses Twitter API to...
-      web      Web frontend for Twitter Wall tool.
-
-twitter.py console help
-=======================
-
-::
-
-    Usage: twitter.py console [OPTIONS]
-
-      Simple tool that uses Twitter API to periodically check in infinite loop
-      new tweets satisfying search expression. This tool depends on a
-      configuration file which must be provided by the user. The configuration
-      file contains Twitter API key and secret properties, that are afterwards
-      used for authentication purposes.
-
-    Options:
-      --config TEXT                 Path to a configuration file with Twitter API
-                                    keys.
-      -s, --search TEXT             Expression to be searched on Twitter.
-      -c, --count INTEGER           Count of tweets to be queried during initial
-                                    wave.
-      -i, --interval INTEGER        Interval in seconds specifying time period to
-                                    query new tweets.
-      -v, --verbose                 Show additional output.
-      --lang TEXT                   Restricts tweets to the given language, given
-                                    by an ISO 639-1 code.
-      --retweeted / --no-retweeted  Enable or disable showing of retweets.
-      --show-id                     Show tweet's ID
-      --show-date                   Show tweet's creation date.
-      --show-name                   Show tweet's author name.
-      --show-screen-name            Show tweet's author twitter nickname.
-      --help                        Show this message and exit.
-
-twitter.py web help
-===================
-
-::
-
-    Usage: twitter.py web [OPTIONS]
-
-      Web frontend for Twitter Wall tool. User can query specified twitter
-      search expression on simple web page and show results in simple format
-      including all additional tweet entities.
-
-    Options:
-      --debug         Setup debug flags for Flask application.
-      --port INTEGER  TCP port of the web server.
-      --host TEXT     The hostname to listen on.
-      --config TEXT   Path to a configuration file with Twitter API keys.
-      --help          Show this message and exit.
-
-configuration file
-==================
-
-In order to be able to properly start twitter wall tool, it is necessary
-to create configuration file containing OAuth credentials to
-authenticate into Twitter API. The configuration file has following
-form:
-
-::
-
-    [twitter]
-    key=XXXXXXXXXX
-    secret=YYYYYYYYY
-
-Of course, *XXXXXXXXXX* and *YYYYYYYYY* must be replaced for correct
-Twitter API key and secret. Twitter wall tool will implicitly look for
-configuration file named auth.cfg in executed directory, however this
-behavior can be changed using *--config* parameter.
+Module is also uploaded on `testPyPi <https://testpypi.python.org/pypi/twitterjk>`_.
 
 .. |Build Status| image:: https://travis-ci.com/kozajaku/MI-PYT.svg?token=qexzosAyQM9jnGAQRNvZ&branch=master
-   :target: https://travis-ci.com/kozajaku/MI-PYT
+    :target: https://travis-ci.com/kozajaku/MI-PYT
+.. |Docbuild Status| image:: https://readthedocs.org/projects/twitterjk/badge/?version=latest
+    :target: http://twitterjk.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
