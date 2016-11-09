@@ -12,8 +12,13 @@ app.config["config_path"] = "auth.cfg"
 
 
 class TwitterWall:
+    """TwitterWall class uses passed session in order to retrieve tweets from Twitter API and provide
+    additional possible filtering.
+
+    :ivar session: Already created requests session that will be used for requests."""
+
     def __init__(self, session):
-        """Constructor assigns new twitter session into instance"""
+        """Constructor assigns new twitter session into instance."""
         self.session = session
 
     def fetch_tweets(self, params, configuration):
@@ -26,7 +31,7 @@ class TwitterWall:
 
     @staticmethod
     def filter_tweets(tweets, configuration):
-        """Function provides filtering in tweets collection"""
+        """Function provides filtering in tweets collection."""
         filtered = len(tweets)
         if not configuration["retweeted"]:
             tweets = filter(lambda t: "retweeted_status" not in t, tweets)
@@ -40,13 +45,13 @@ class TwitterWall:
         return tweets
 
     def tweet_single_fetch(self, search, count, configuration):
-        """Function fetches count tweets, filters them and return for the purpose of web app"""
+        """Function fetches count tweets, filters them and return for the purpose of web app."""
         params = {"q": search,
                   "count": count}
         return self.filter_tweets(self.fetch_tweets(params, configuration), configuration)
 
     def tweet_stream(self, search, count, interval, configuration):
-        """Function fetches tweets in infinite loop and yields their generator"""
+        """Function fetches tweets in infinite loop and yields their generator."""
         params = {"q": search,
                   "count": count}
         # check for lang param
@@ -90,7 +95,7 @@ class TwitterWall:
 
     @staticmethod
     def tweet_console_format(tweet, configuration):
-        """Method formats tweet for printing into console"""
+        """Method formats tweet for printing into console."""
         name = screen_name = created = tid = ""
         if configuration["show_name"]:
             name = "Name: {}, ".format(tweet["user"]["name"])
@@ -138,12 +143,14 @@ def index_page():
 
 @app.template_filter('time')
 def convert_time(passed_time):
-    """Convert the Twitter time format to own type"""
+    """Convert the Twitter time format to own type."""
     return datetime.strptime(passed_time, "%a %b %d %H:%M:%S %z %Y").replace(tzinfo=timezone.utc). \
         astimezone(tz=None).strftime("%H:%M:%S %d/%m/%Y")
 
 
 def create_link(href, text, as_search=False):
+    """Creates <a href... link from passed href and text. Href is prefixed by
+    /search?q= if as_search parameter is True"""
     if as_search:
         escaped_href = urllib.parse.quote_plus(href)
         return "<a href=\"/search?q={}\">{}</a>".format(escaped_href, text)
@@ -153,7 +160,7 @@ def create_link(href, text, as_search=False):
 
 @app.template_filter('user_mentions')
 def create_user_mentions(mentions):
-    """Convert user_mention entities into readable format"""
+    """Convert user_mention entities into readable format."""
     return ", ".join(
             map(lambda m: create_link("@" + m["screen_name"], "{} (@{})".format(m["name"], m["screen_name"]), True),
                 mentions))
@@ -161,24 +168,25 @@ def create_user_mentions(mentions):
 
 @app.template_filter('hashtags')
 def create_hashtags(hashtags):
-    """Convert hashtag entities into readable format"""
+    """Convert hashtag entities into readable format."""
     return ", ".join(map(lambda h: create_link("#" + h["text"], "#" + h["text"], True), hashtags))
 
 
 @app.template_filter('urls')
 def create_urls(urls):
-    """Convert url entities into readable format"""
+    """Convert url entities into readable format."""
     return ", ".join(map(lambda u: create_link(u["expanded_url"], u["expanded_url"]), urls))
 
 
 @app.template_filter('symbols')
 def create_urls(symbols):
-    """Convert symbol entities into readable format"""
+    """Convert symbol entities into readable format."""
     return ", ".join(map(lambda s: s["text"], symbols))
 
 
 @app.template_filter("image")
 def create_image(src, size=None):
+    """Creates HTML image tag. Optionaly, twitter size param can be passed."""
     if size is None:
         return "<image src=\"{}\" />".format(src)
     else:
@@ -187,7 +195,7 @@ def create_image(src, size=None):
 
 @app.template_filter('media')
 def create_media(media):
-    """Convert media entities into readable format"""
+    """Convert media entities into readable format."""
     return "\n".join(map(lambda m: create_image(m["media_url"], "small"), media))
 
 
@@ -269,6 +277,7 @@ def twitter_session(api_key, api_secret, session=None):
 
 @click.group()
 def cli():
+    """This function serves as a guidepost for click framework."""
     pass
 
 
@@ -323,4 +332,5 @@ def web(debug, port, host, config_path):
 
 
 def main():
+    """This method is implicitly invoked when the tool is started from console."""
     cli()

@@ -5,3 +5,4 @@ Sources
     :maxdepth: 2
 
     twitterjk
+    examples
